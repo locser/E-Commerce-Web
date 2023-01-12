@@ -1,11 +1,9 @@
 package com.locser.ecommerce.config;
 
-import com.locser.ecommerce.entity.Country;
-import com.locser.ecommerce.entity.Product;
-import com.locser.ecommerce.entity.ProductCategory;
+import com.locser.ecommerce.entity.*;
 
-import com.locser.ecommerce.entity.State;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
 import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;
@@ -23,6 +21,8 @@ import java.util.Set;
 @Configuration
 public class MyDataRestConfig implements RepositoryRestConfigurer {
 
+    @Value("${allowed.origins}")
+    private String[] theAllowedOrigins;
 
     private EntityManager entityManager;
 
@@ -35,7 +35,7 @@ public class MyDataRestConfig implements RepositoryRestConfigurer {
     @Override
     public void configureRepositoryRestConfiguration(RepositoryRestConfiguration config, CorsRegistry cors) {
 
-        HttpMethod[] theUnsupportedActions = {HttpMethod.PUT, HttpMethod.DELETE, HttpMethod.POST};
+        HttpMethod[] theUnsupportedActions = {HttpMethod.PUT, HttpMethod.DELETE, HttpMethod.POST, HttpMethod.PATCH};
 
         // disable HTTP methods for Product: PUT, POST, DELETE and PATCH
 //        config.getExposureConfiguration()
@@ -63,8 +63,13 @@ public class MyDataRestConfig implements RepositoryRestConfigurer {
         disableHttpMethods(Country.class,config,theUnsupportedActions);
         disableHttpMethods(State.class,config,theUnsupportedActions);
 
+        disableHttpMethods(Order.class,config,theUnsupportedActions);
+
         //call an internal helper method
         exposeIds(config);
+
+        //configure cors mapping
+        cors.addMapping(config.getBasePath() + "/**").allowedOrigins(theAllowedOrigins);
     }
 
     private void disableHttpMethods(Class theClass,RepositoryRestConfiguration config, HttpMethod[] theUnsupportedActions) {
